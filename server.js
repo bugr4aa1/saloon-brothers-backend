@@ -50,7 +50,8 @@ function mapBarber(row) {
     rating: parseFloat(row.rating),
     reviewCount: row.review_count,
     experience: row.experience,
-    avatar: row.avatar
+    avatar: row.avatar,
+    branch: row.branch
   };
 }
 
@@ -96,6 +97,34 @@ function mapExpense(row) {
 }
 
 // API Endpoints
+
+// 0. Login Endpoint
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  
+  // Static logins mapping
+  const users = {
+    'admin': { password: 'admin', role: 'owner', barberId: null, name: 'Dükkan Sahibi' },
+    'izzethan': { password: 'izzethan123', role: 'barber', barberId: 1, name: 'İzzethan Çiftçi' },
+    'turgut': { password: 'turgut123', role: 'barber', barberId: 2, name: 'Turgut Akhan' },
+    'berathan': { password: 'berathan123', role: 'barber', barberId: 3, name: 'Berathan Çiftçi' }
+  };
+
+  const user = users[username?.toLowerCase()];
+  if (user && user.password === password) {
+    return res.json({
+      success: true,
+      user: {
+        username,
+        role: user.role,
+        barberId: user.barberId,
+        name: user.name
+      }
+    });
+  }
+
+  res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
+});
 
 // 1. Get Barbers
 app.get('/api/barbers', async (req, res) => {

@@ -33,8 +33,14 @@ export async function initDb() {
         rating DECIMAL(3,1),
         review_count INTEGER,
         experience VARCHAR(50),
-        avatar VARCHAR(255)
+        avatar VARCHAR(255),
+        branch INTEGER DEFAULT 1
       );
+    `);
+
+    // Ensure branch column exists if table was already created
+    await client.query(`
+      ALTER TABLE barbers ADD COLUMN IF NOT EXISTS branch INTEGER DEFAULT 1;
     `);
 
     // 2. Services Table
@@ -96,39 +102,47 @@ export async function initDb() {
 
     for (const b of barbersData) {
       await client.query(
-        `INSERT INTO barbers (id, name, specialty, rating, review_count, experience, avatar)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO barbers (id, name, specialty, rating, review_count, experience, avatar, branch)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (id) DO UPDATE 
          SET name = EXCLUDED.name,
              specialty = EXCLUDED.specialty,
              rating = EXCLUDED.rating,
              review_count = EXCLUDED.review_count,
              experience = EXCLUDED.experience,
-             avatar = EXCLUDED.avatar`,
-        [b.id, b.name, b.specialty, b.rating, b.reviewCount, b.experience, b.avatar]
+             avatar = EXCLUDED.avatar,
+             branch = EXCLUDED.branch`,
+        [b.id, b.name, b.specialty, b.rating, b.reviewCount, b.experience, b.avatar, b.branch || 1]
       );
     }
     // Reset sequence
     await client.query(`SELECT setval('barbers_id_seq', (SELECT MAX(id) FROM barbers))`);
 
 
-    // Seed mock services if empty
-    const serviceCheck = await client.query('SELECT COUNT(*) FROM services');
-    if (parseInt(serviceCheck.rows[0].count) === 0) {
-      console.log('Seeding services table from JSON mock data...');
-      const servicesData = JSON.parse(
-        await fs.readFile(path.join(__dirname, 'data', 'services.json'), 'utf8')
+    // Sync services table from JSON mock data
+    console.log('Syncing services table with JSON mock data...');
+    const servicesData = JSON.parse(
+      await fs.readFile(path.join(__dirname, 'data', 'services.json'), 'utf8')
+    );
+    const validServiceIds = servicesData.map(s => s.id);
+    
+    await client.query('DELETE FROM services WHERE id != ANY($1)', [validServiceIds]);
+
+    for (const s of servicesData) {
+      await client.query(
+        `INSERT INTO services (id, name, description, price, duration)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (id) DO UPDATE 
+         SET name = EXCLUDED.name,
+             description = EXCLUDED.description,
+             price = EXCLUDED.price,
+             duration = EXCLUDED.duration`,
+        [s.id, s.name, s.description, s.price, s.duration]
       );
-      for (const s of servicesData) {
-        await client.query(
-          `INSERT INTO services (id, name, description, price, duration)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [s.id, s.name, s.description, s.price, s.duration]
-        );
-      }
-      // Reset sequence
-      await client.query(`SELECT setval('services_id_seq', (SELECT MAX(id) FROM services))`);
     }
+    // Reset sequence
+    await client.query(`SELECT setval('services_id_seq', (SELECT MAX(id) FROM services))`);
+
 
     console.log('Database seeding complete.');
   } catch (err) {
