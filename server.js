@@ -127,11 +127,13 @@ app.get('/api/slots', async (req, res) => {
     return res.status(400).json({ error: 'barberId ve date parametreleri zorunludur.' });
   }
 
-  // Work hours from 09:00 to 20:00
+  // Work hours from 10:00 to 21:00 (30 minute intervals)
   const allSlots = [
-    '09:00', '10:00', '11:00', '12:00', '13:00', 
-    '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
+    '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', 
+    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', 
+    '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00'
   ];
+
 
   try {
     // Filter active (non-cancelled) appointments for the selected barber and date
@@ -165,7 +167,20 @@ app.post('/api/appointments', async (req, res) => {
   }
 
   try {
+    // Verify date is not a Sunday (0 = Sunday)
+    const dateParts = date.split('-');
+    if (dateParts.length === 3) {
+      const year = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10) - 1; 
+      const day = parseInt(dateParts[2], 10);
+      const parsedDate = new Date(year, month, day);
+      if (parsedDate.getDay() === 0) {
+        return res.status(400).json({ error: 'Pazar günleri dükkanımız kapalıdır.' });
+      }
+    }
+
     // Check if slot is already booked for this barber (exclude cancelled ones)
+
     const checkRes = await pool.query(
       `SELECT COUNT(*) FROM appointments 
        WHERE barber_id = $1 AND appointment_date = $2 AND appointment_time = $3 AND status != 'İptal Edildi'`,
