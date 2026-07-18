@@ -70,8 +70,14 @@ export async function initDb() {
         total_price INTEGER NOT NULL,
         total_duration INTEGER NOT NULL,
         status VARCHAR(50) DEFAULT 'Beklemede',
-        created_at VARCHAR(50) NOT NULL
+        created_at VARCHAR(50) NOT NULL,
+        payment_method VARCHAR(50) DEFAULT 'Nakit'
       );
+    `);
+
+    // Ensure payment_method column exists if table already existed
+    await client.query(`
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) DEFAULT 'Nakit';
     `);
 
     // 4. Expenses Table

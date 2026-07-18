@@ -80,7 +80,8 @@ function mapAppointment(row) {
     totalPrice: row.total_price,
     totalDuration: row.total_duration,
     status: row.status,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    paymentMethod: row.payment_method || ''
   };
 }
 
@@ -289,18 +290,25 @@ app.get('/api/appointments', async (req, res) => {
 // 6. Update appointment status (Onaylandı, İptal Edildi, Beklemede, Tamamlandı, Veresiye, Tamamlanmadı)
 app.patch('/api/appointments/:id', async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, paymentMethod } = req.body;
 
   if (!status || !['Onaylandı', 'İptal Edildi', 'Beklemede', 'Tamamlandı', 'Veresiye', 'Tamamlanmadı'].includes(status)) {
     return res.status(400).json({ error: 'Geçersiz randevu durumu.' });
   }
 
-
   try {
-    const result = await pool.query(
-      'UPDATE appointments SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
-    );
+    let result;
+    if (status === 'Tamamlandı') {
+      result = await pool.query(
+        'UPDATE appointments SET status = $1, payment_method = $2 WHERE id = $3 RETURNING *',
+        [status, paymentMethod || 'Nakit', id]
+      );
+    } else {
+      result = await pool.query(
+        'UPDATE appointments SET status = $1 WHERE id = $2 RETURNING *',
+        [status, id]
+      );
+    }
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Randevu bulunamadı.' });
@@ -312,6 +320,88 @@ app.patch('/api/appointments/:id', async (req, res) => {
     res.status(500).json({ error: 'Randevu durumu güncellenirken hata oluştu.' });
   }
 });
+
+// 6.5 Pay Veresiye Debt (FIFO Partial payment)
+app.post('/api/appointments/pay-debt', async (req, res) => {
+  const { customerPhone, amount, paymentMethod } = req.body;
+  if (!customerPhone || !amount || amount <= 0) {
+    return res.status(400).json({ error: 'Geçersiz parametreler.' });
+  }
+
+  let remainingAmount = parseInt(amount);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Get all active Veresiye appointments for this customer phone, sorted oldest first
+    const result = await client.query(
+      `SELECT * FROM appointments 
+       WHERE customer_phone = $1 AND status = 'Veresiye' 
+       ORDER BY created_at ASC`,
+      [customerPhone]
+    );
+
+    const veresiyes = result.rows;
+    if (veresiyes.length === 0) {
+      throw new Error('Bu müşteriye ait aktif veresiye kaydı bulunamadı.');
+    }
+
+    for (const app of veresiyes) {
+      if (remainingAmount <= 0) break;
+
+      if (app.total_price <= remainingAmount) {
+        // Fully paid off
+        remainingAmount -= app.total_price;
+        await client.query(
+          `UPDATE appointments 
+           SET status = 'Tamamlandı', payment_method = $1 
+           WHERE id = $2`,
+          [paymentMethod || 'Nakit', app.id]
+        );
+      } else {
+        // Partial payment - split the appointment!
+        const newPrice = app.total_price - remainingAmount;
+        const paidAmount = remainingAmount;
+        remainingAmount = 0;
+
+        // 1. Update original appointment with remaining debt
+        await client.query(
+          `UPDATE appointments 
+           SET total_price = $1 
+           WHERE id = $2`,
+          [newPrice, app.id]
+        );
+
+        // 2. Insert a new completed appointment representing the partial payment amount
+        const newId = Date.now().toString() + '_split';
+        const createdAt = new Date().toISOString();
+        await client.query(
+          `INSERT INTO appointments (
+            id, barber_id, barber_name, services, appointment_date, appointment_time, 
+            customer_name, customer_phone, customer_email, notes, total_price, total_duration, 
+            status, created_at, payment_method
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+          [
+            newId, app.barber_id, app.barber_name, app.services, app.appointment_date, app.appointment_time,
+            app.customer_name, app.customer_phone, app.customer_email || '', 
+            (app.notes || '') + ` (Kısmi Tahsilat: ${paidAmount} TL)`, 
+            paidAmount, app.total_duration, 'Tamamlandı', createdAt, paymentMethod || 'Nakit'
+          ]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: err.message || 'Tahsilat gerçekleştirilemedi.' });
+  } finally {
+    client.release();
+  }
+});
+
 
 // 7. Delete appointment
 app.delete('/api/appointments/:id', async (req, res) => {
