@@ -136,10 +136,10 @@ app.get('/api/slots', async (req, res) => {
 
 
   try {
-    // Filter active (non-cancelled) appointments for the selected barber and date
+    // Filter active (non-cancelled, non-no-show) appointments for the selected barber and date
     const result = await pool.query(
       `SELECT appointment_time FROM appointments 
-       WHERE barber_id = $1 AND appointment_date = $2 AND status != 'İptal Edildi'`,
+       WHERE barber_id = $1 AND appointment_date = $2 AND status NOT IN ('İptal Edildi', 'Tamamlanmadı')`,
       [parseInt(barberId), date]
     );
 
@@ -179,11 +179,21 @@ app.post('/api/appointments', async (req, res) => {
       }
     }
 
-    // Check if slot is already booked for this barber (exclude cancelled ones)
+    // Verify that the customer doesn't already have an active (Beklemede or Onaylandı) appointment
+    const activeCheck = await pool.query(
+      `SELECT COUNT(*) FROM appointments 
+       WHERE customer_phone = $1 AND status IN ('Beklemede', 'Onaylandı')`,
+      [customerPhone]
+    );
 
+    if (parseInt(activeCheck.rows[0].count) > 0) {
+      return res.status(400).json({ error: 'Mevcut bekleyen veya onaylanmış bir randevunuz zaten bulunmaktadır. Yeni randevu alabilmek için onun tamamlanmasını beklemelisiniz.' });
+    }
+
+    // Check if slot is already booked for this barber (exclude cancelled/no-shows)
     const checkRes = await pool.query(
       `SELECT COUNT(*) FROM appointments 
-       WHERE barber_id = $1 AND appointment_date = $2 AND appointment_time = $3 AND status != 'İptal Edildi'`,
+       WHERE barber_id = $1 AND appointment_date = $2 AND appointment_time = $3 AND status NOT IN ('İptal Edildi', 'Tamamlanmadı')`,
       [parseInt(barberId), date, time]
     );
 
