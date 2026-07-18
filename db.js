@@ -83,23 +83,34 @@ export async function initDb() {
 
     console.log('Tables initialized successfully.');
 
-    // Seed mock barbers if empty
-    const barberCheck = await client.query('SELECT COUNT(*) FROM barbers');
-    if (parseInt(barberCheck.rows[0].count) === 0) {
-      console.log('Seeding barbers table from JSON mock data...');
-      const barbersData = JSON.parse(
-        await fs.readFile(path.join(__dirname, 'data', 'barbers.json'), 'utf8')
+    // Sync barbers table from JSON mock data
+    console.log('Syncing barbers table with JSON mock data...');
+    const barbersData = JSON.parse(
+      await fs.readFile(path.join(__dirname, 'data', 'barbers.json'), 'utf8')
+    );
+    const validIds = barbersData.map(b => b.id);
+    
+    // Clean up old references to barbers that no longer exist
+    await client.query('DELETE FROM appointments WHERE barber_id != ANY($1)', [validIds]);
+    await client.query('DELETE FROM barbers WHERE id != ANY($1)', [validIds]);
+
+    for (const b of barbersData) {
+      await client.query(
+        `INSERT INTO barbers (id, name, specialty, rating, review_count, experience, avatar)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (id) DO UPDATE 
+         SET name = EXCLUDED.name,
+             specialty = EXCLUDED.specialty,
+             rating = EXCLUDED.rating,
+             review_count = EXCLUDED.review_count,
+             experience = EXCLUDED.experience,
+             avatar = EXCLUDED.avatar`,
+        [b.id, b.name, b.specialty, b.rating, b.reviewCount, b.experience, b.avatar]
       );
-      for (const b of barbersData) {
-        await client.query(
-          `INSERT INTO barbers (id, name, specialty, rating, review_count, experience, avatar)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [b.id, b.name, b.specialty, b.rating, b.reviewCount, b.experience, b.avatar]
-        );
-      }
-      // Reset sequence
-      await client.query(`SELECT setval('barbers_id_seq', (SELECT MAX(id) FROM barbers))`);
     }
+    // Reset sequence
+    await client.query(`SELECT setval('barbers_id_seq', (SELECT MAX(id) FROM barbers))`);
+
 
     // Seed mock services if empty
     const serviceCheck = await client.query('SELECT COUNT(*) FROM services');
