@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Modern Saç Kesimi",
+    "description": "Kişiye özel saç kesimi, yıkama ve stil şekillendirme.",
+    "price": 250,
+    "duration": 45
+  },
+  {
+    "id": 2,
+    "name": "Sakal Tasarımı",
+    "description": "Ustura ve makine ile sakal şekillendirme, sakal bakım yağı uygulaması.",
+    "price": 150,
+    "duration": 30
+  },
+  {
+    "id": 3,
+    "name": "Saç & Sakal Kombin",
+    "description": "Detaylı saç kesimi ve sakal tasarımı, yıkama, kulak/burun tüyü alımı.",
+    "price": 350,
+    "duration": 60
+  },
+  {
+    "id": 4,
+    "name": "Detoks Cilt Bakımı",
+    "description": "Siyah nokta temizliği, buharlı yüz masajı ve nemlendirici maske.",
+    "price": 200,
+    "duration": 45
+  },
+  {
+    "id": 5,
+    "name": "Saç Boyama (Renklendirme)",
+    "description": "Profesyonel saç renklendirme ve gri kapama işlemleri.",
+    "price": 500,
+    "duration": 90
+  },
+  {
+    "id": 6,
+    "name": "VIP Komple Bakım",
+    "description": "Saç kesimi, sakal tasarımı, cilt bakımı, saç maskesi ve sıcak havlu masajı.",
+    "price": 600,
+    "duration": 90
+  }
+]

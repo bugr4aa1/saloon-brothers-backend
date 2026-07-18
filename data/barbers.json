@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "name": "Ahmet Yılmaz",
+    "specialty": "Saç Tasarımı & Stilist",
+    "rating": 4.9,
+    "reviewCount": 124,
+    "experience": "8 Yıl",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face"
+  },
+  {
+    "id": 2,
+    "name": "Caner Demir",
+    "specialty": "Sakal Tasarımı & Ustura Tıraşı",
+    "rating": 4.8,
+    "reviewCount": 98,
+    "experience": "6 Yıl",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+  },
+  {
+    "id": 3,
+    "name": "Mustafa Kaya",
+    "specialty": "Saç Boyama & Modern Kesimler",
+    "rating": 4.7,
+    "reviewCount": 85,
+    "experience": "5 Yıl",
+    "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face"
+  }
+]

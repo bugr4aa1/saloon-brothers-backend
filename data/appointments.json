@@ -1,0 +1,74 @@
+[
+  {
+    "id": "1784398666016",
+    "barberId": 2,
+    "barberName": "Caner Demir",
+    "services": [
+      {
+        "id": 3,
+        "name": "Saç & Sakal Kombin",
+        "description": "Detaylı saç kesimi ve sakal tasarımı, yıkama, kulak/burun tüyü alımı.",
+        "price": 350,
+        "duration": 60
+      }
+    ],
+    "date": "2026-07-20",
+    "time": "18:00",
+    "customerName": "Mustafa Buğra Kılınç",
+    "customerPhone": "5303102742",
+    "customerEmail": "",
+    "notes": "",
+    "totalPrice": 350,
+    "totalDuration": 60,
+    "status": "Beklemede",
+    "createdAt": "2026-07-18T18:17:46.016Z"
+  },
+  {
+    "id": "1784398758348",
+    "barberId": 1,
+    "barberName": "Ahmet Yılmaz",
+    "services": [
+      {
+        "id": 2,
+        "name": "Sakal Tasarımı",
+        "description": "Ustura ve makine ile sakal şekillendirme, sakal bakım yağı uygulaması.",
+        "price": 150,
+        "duration": 30
+      }
+    ],
+    "date": "2026-07-20",
+    "time": "18:00",
+    "customerName": "Mustafa Buğra Kılınç",
+    "customerPhone": "5303102742",
+    "customerEmail": "",
+    "notes": "",
+    "totalPrice": 150,
+    "totalDuration": 30,
+    "status": "İptal Edildi",
+    "createdAt": "2026-07-18T18:19:18.348Z"
+  },
+  {
+    "id": "1784399343348",
+    "barberId": 1,
+    "barberName": "Ahmet Yılmaz",
+    "services": [
+      {
+        "id": 3,
+        "name": "Saç & Sakal Kombin",
+        "description": "Detaylı saç kesimi ve sakal tasarımı, yıkama, kulak/burun tüyü alımı.",
+        "price": 350,
+        "duration": 60
+      }
+    ],
+    "date": "2026-07-21",
+    "time": "19:00",
+    "customerName": "Mustafa Buğra Kılınç",
+    "customerPhone": "5303102742",
+    "customerEmail": "",
+    "notes": "",
+    "totalPrice": 350,
+    "totalDuration": 60,
+    "status": "Beklemede",
+    "createdAt": "2026-07-18T18:29:03.348Z"
+  }
+]
