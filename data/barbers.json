@@ -1,20 +1,20 @@
 [
   {
     "id": 1,
-    "name": "Turgut",
+    "name": "Berat Han Çiftçi",
     "specialty": "Saç Tasarımı & Stilist",
-    "rating": 4.9,
-    "reviewCount": 124,
-    "experience": "10 Yıl",
+    "rating": 0,
+    "reviewCount": 0,
+    "experience": "",
     "avatar": ""
   },
   {
     "id": 2,
-    "name": "İzzet",
+    "name": "İzzet Han Çiftçi",
     "specialty": "Sakal Tasarımı & Ustura Tıraşı",
-    "rating": 4.8,
-    "reviewCount": 98,
-    "experience": "8 Yıl",
+    "rating": 0,
+    "reviewCount": 0,
+    "experience": "",
     "avatar": ""
   }
 ]
